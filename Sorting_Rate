@@ -1,0 +1,81 @@
+import time
+import platform
+import numpy as np
+from sklearn.manifold import SpectralEmbedding
+from sklearn.cluster import AgglomerativeClustering
+from umap import UMAP
+warnings.filterwarnings("ignore")
+
+# Configuration
+SUBSET_SIZES = [100, 500, 1000, 1500, 2000, 2500,3000]  # Number of spikes to test
+N_RUNS = 10
+RANDOM_SEED = 42
+
+# Print processor characteristics
+print("Processor Information:")
+print(f"Architecture: {platform.machine()}")
+print(f"Processor: {platform.processor()}")
+try:
+    with open('/proc/cpuinfo', 'r') as f:
+        for line in f:
+            if 'model name' in line:
+                print(f"CPU Model: {line.split(': ')[1].strip()}")
+                break
+except Exception as e:
+    print(f"Could not read CPU info: {e}")
+
+def create_subset(data, labels, n_samples):
+    """Randomly sample spikes while maintaining label distribution"""
+    rng = np.random.RandomState(RANDOM_SEED)
+    indices = rng.choice(len(data), size=n_samples, replace=False)
+    return data[indices], labels[indices]
+
+def run_benchmark(method, data, labels, n_runs=N_RUNS):
+    times = []
+    rates = []
+    accuracies = []
+
+    for _ in range(n_runs):
+        start_time = time.time()
+
+        if method == 'spectral':
+            emb = SpectralEmbedding(n_components=2).fit_transform(data)
+        elif method == 'umap':
+            emb = UMAP(n_neighbors=100).fit_transform(data)
+
+        clustering = AgglomerativeClustering(n_clusters=3).fit(emb)
+        elapsed = time.time() - start_time
+
+        rate = len(data) / elapsed
+        cluster_labels = clustering.labels_ + 1
+        accuracy = calculate_accuracy(labels, cluster_labels)
+
+        times.append(elapsed)
+        rates.append(rate)
+        accuracies.append(accuracy)
+
+    return {
+        'time': (np.mean(times), np.std(times)),
+        'rate': (np.mean(rates), np.std(rates)),
+        'accuracy': (np.mean(accuracies), np.std(accuracies))
+    }
+
+# Main analysis
+print("\nBenchmark Results:")
+for size in SUBSET_SIZES:
+    print(f"\n── {size} spikes ──")
+    subset_data, subset_labels = create_subset(data1, label1, size)
+
+    # Spectral
+    spec = run_benchmark('spectral', subset_data, subset_labels)
+    # UMAP
+    umap = run_benchmark('umap', subset_data, subset_labels)
+
+    # Print formatted results
+    print(f"Spectral: {spec['time'][0]:.3f}s ± {spec['time'][1]:.3f} | "
+          f"{spec['rate'][0]:.0f} ± {spec['rate'][1]:.0f} spikes/s | "
+          f"Acc: {spec['accuracy'][0]:.3f} ± {spec['accuracy'][1]:.3f}")
+
+    print(f"UMAP:    {umap['time'][0]:.3f}s ± {umap['time'][1]:.3f} | "
+          f"{umap['rate'][0]:.0f} ± {umap['rate'][1]:.0f} spikes/s | "
+          f"Acc: {umap['accuracy'][0]:.3f} ± {umap['accuracy'][1]:.3f}")
