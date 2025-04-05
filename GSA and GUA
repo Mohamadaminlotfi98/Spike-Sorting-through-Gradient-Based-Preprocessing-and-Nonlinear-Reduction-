@@ -1,0 +1,151 @@
+import numpy as np
+from sklearn.metrics import silhouette_score, confusion_matrix
+from sklearn.mixture import GaussianMixture
+from sklearn.manifold import SpectralEmbedding
+from sklearn.cluster import AgglomerativeClustering
+from scipy.optimize import linear_sum_assignment
+from umap import UMAP
+
+def apply_gradient(data, n=1):
+    if n < 1:
+        return data
+    for _ in range(n):
+        data = np.diff(data, axis=1)
+    return data
+
+def calculate_accuracy(true_labels, pred_labels):
+    """Calculate accuracy with per-class metrics and handle unassigned clusters."""
+    # Handle edge cases with empty labels
+    if len(true_labels) == 0 or len(pred_labels) == 0:
+        return 0, {}, 0
+
+    cm = confusion_matrix(true_labels, pred_labels)
+    if cm.size == 0:
+        return 0, {}, 0
+
+    # Optimal label alignment
+    row_ind, col_ind = linear_sum_assignment(-cm)
+
+    # Map predicted clusters to true classes
+    pred_to_true = {}
+    for true_idx, pred_idx in zip(row_ind, col_ind):
+        if pred_idx < cm.shape[1]:
+            pred_to_true[pred_idx] = true_idx
+
+    # Remap predicted labels to aligned true classes
+    mapped_pred_labels = np.array([pred_to_true.get(p, -1) for p in pred_labels])
+
+    # Get unique true labels and compute aligned confusion matrix
+    unique_true = np.unique(true_labels)
+    aligned_cm = confusion_matrix(true_labels, mapped_pred_labels, labels=unique_true)
+
+    # Calculate overall accuracy
+    total = aligned_cm.sum()
+    accuracy = np.trace(aligned_cm) / total if total > 0 else 0
+
+    # Calculate per-class metrics
+    class_metrics = {}
+    for i, true_class in enumerate(unique_true):
+        TP = aligned_cm[i, i]
+        FN = aligned_cm[i, :].sum() - TP
+        FP = aligned_cm[:, i].sum() - TP
+        accuracy_i = TP / (TP + FN) if (TP + FN) > 0 else 0
+        class_metrics[true_class] = {
+            'Accuracy': accuracy_i,
+            'TP': TP,
+            'FN': FN,
+            'FP': FP
+        }
+
+    # Count unassigned predicted instances
+    unassigned = (mapped_pred_labels == -1).sum()
+
+    return accuracy, class_metrics, unassigned
+
+def optimal_gradient_order(data, labels, embedding_method, embedding_params, gradient_range, cluster_range):
+    best_silhouette = -1
+    best_gradient_order = None
+    best_cluster_count = None
+    best_labels = None
+
+    for order in gradient_range:
+        transformed_data = apply_gradient(data, order)
+
+        # Apply embedding
+        if embedding_method == "UMAP":
+            embedded_data = UMAP(**embedding_params).fit_transform(transformed_data)
+        else:
+            embedded_data = SpectralEmbedding(**embedding_params).fit_transform(transformed_data)
+
+        for n_clusters in cluster_range:
+            clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward').fit(embedded_data)
+            cluster_labels = clustering.labels_
+
+            # Skip if all points are in one cluster
+            if len(np.unique(cluster_labels)) < 2:
+                continue
+
+            silhouette = silhouette_score(embedded_data, cluster_labels)
+            if silhouette > best_silhouette:
+                best_silhouette = silhouette
+                best_gradient_order = order
+                best_cluster_count = n_clusters
+                best_labels = cluster_labels
+
+    # Calculate metrics if valid labels exist
+    if best_labels is not None:
+        accuracy, class_metrics, unassigned = calculate_accuracy(labels, best_labels)
+    else:
+        accuracy, class_metrics, unassigned = 0, {}, 0
+
+    print(f"\nOptimal Gradient Order: {best_gradient_order}, Predicted Clusters: {best_cluster_count}")
+    print(f"Silhouette Score: {best_silhouette:.4f}, Overall Accuracy: {accuracy:.4f}")
+
+    # Print per-class metrics
+    if class_metrics:
+        print("\nPer-class Metrics:")
+        for class_label in sorted(class_metrics.keys()):
+            metrics = class_metrics[class_label]
+            print(f"Class {class_label}:")
+            print(f"  Accuracy: {metrics['Accuracy']:.4f}")
+            print(f"  True Positives (TP): {metrics['TP']}")
+            print(f"  False Negatives (FN): {metrics['FN']}")
+            print(f"  False Positives (FP): {metrics['FP']}")
+
+    if unassigned > 0:
+        print(f"\nUnassigned Instances (No Matching Cluster): {unassigned}")
+
+    return best_gradient_order, best_cluster_count, accuracy
+
+# Example usage (ask the user for parameters)
+def get_numeric_input(prompt, default):
+    user_input = input(f"{prompt} (default={default}): ")
+    return int(user_input) if user_input.strip().isdigit() else default
+
+def get_string_input(prompt, options):
+    print(f"{prompt} (Choose from: {', '.join(options)})")
+    return input("Select an option: ")
+
+embedding_method = get_string_input("Select embedding method", ["UMAP", "SpectralEmbedding"])
+
+if embedding_method == "UMAP":
+    embedding_params = {
+        "n_neighbors": get_numeric_input("Enter UMAP n_neighbors", 15),
+        "min_dist": float(input("Enter UMAP min_dist (default=0.1): ") or 0.1),
+        "n_components": get_numeric_input("Enter UMAP n_components", 2)
+    }
+else:
+    embedding_params = {
+        "n_components": get_numeric_input("Enter SpectralEmbedding n_components", 2),
+        "affinity": get_string_input("Enter SpectralEmbedding affinity", ["nearest_neighbors", "rbf"])
+    }
+
+gradient_start = get_numeric_input("Enter start of gradient range", 0)
+gradient_end = get_numeric_input("Enter end of gradient range", 10)
+gradient_range = range(gradient_start, gradient_end + 1) if gradient_start != gradient_end else [gradient_start]
+
+cluster_start = get_numeric_input("Enter start of cluster range", 2)
+cluster_end = get_numeric_input("Enter end of cluster range", 10)
+
+cluster_range = np.arange(cluster_start , cluster_end + 1 )
+optimal_gradient_order(waveforms_array, spike_class, embedding_method, embedding_params, gradient_range, cluster_range)
