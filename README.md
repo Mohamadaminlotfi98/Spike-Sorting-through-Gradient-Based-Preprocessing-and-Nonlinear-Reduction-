@@ -2,19 +2,15 @@
 
 Here’s a polished, detailed GitHub repository description for your spike sorting methods (GSA-Spike and GUA-Spike). I’ve structured it to highlight technical strengths, usability, and reproducibility:
 
-🧠 SpikeSorting-Gradient-UMAP
-Unsupervised Spike Sorting via Gradient-Based Preprocessing, Nonlinear Dimensionality Reduction, and Agglomerative Clustering
-
-License: MIT
-Python 3.8+
-DOI
+##🧠 SpikeSorting
+#Unsupervised Spike Sorting via Gradient-Based Preprocessing, Nonlinear Dimensionality Reduction, and Agglomerative Clustering
 
 A robust, training-free pipeline for spike sorting in electrophysiology, leveraging gradient-based feature enhancement, UMAP/Spectral Embedding for nonlinear dimensionality reduction, and agglomerative clustering. Designed for high-accuracy sorting of overlapping and noisy neural spikes, even in high-density recordings (e.g., Neuropixels). Outperforms traditional methods like PCA, LDA-GMM, and Wave_Clus by 12–18% in challenging scenarios.
 
-🔑 Key Features
+#🔑 Key Features
 Gradient-Based Preprocessing: Extract noise-robust features using nth-order temporal derivatives to amplify spike dynamics (slopes, inflection points).
 
-Nonlinear Dimensionality Reduction:
+#Nonlinear Dimensionality Reduction:
 
 UMAP: Preserve local/global structure for complex, overlapping spike clusters.
 
