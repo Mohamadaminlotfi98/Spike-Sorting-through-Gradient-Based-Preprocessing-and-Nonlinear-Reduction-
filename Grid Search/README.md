@@ -74,20 +74,40 @@ AgglomerativeClustering(
 ## 💻 Example Run (Color Output)
 
 ```python
-# Input parameters
->>> Enter total number of spikes: 3364
->>> Suggested gradient range: 0-3 🌈
->>> Choose embedding method: UMAP 🗺️
->>> Select metric: silhouette 📐
+from your_module import get_optimal_parameters, run_grid_search
 
-# Optimization progress
-Processing combination 23/150...
-✅ Found new best: Silhouette=0.72
-┌──────────────────────┬──────────────┐
-│ Gradient Order       │ 2            │
-│ UMAP n_neighbors     │ 25           │
-│ Clusters             │ 6            │
-└──────────────────────┴──────────────┘
+# Get optimal parameters
+param_grid, metric = get_optimal_parameters(your_data)
+best_params, best_score = run_grid_search(your_data, param_grid, metric)
+```
+# Apply optimal parameters to your full dataset
+
+```python
+import numpy as np
+from your_module import apply_gradient, get_optimal_parameters, run_grid_search
+
+# Load your spike data
+spike_data = np.load('spikes.npy')  # Shape: [n_spikes, n_features]
+
+# Find optimal parameters
+param_grid, metric = get_optimal_parameters(spike_data)
+best_params, best_score = run_grid_search(spike_data, param_grid, metric)
+
+# Apply best parameters
+processed_data = apply_gradient(spike_data, best_params['gradient_order'])
+
+# Apply optimal embedding
+if best_params['embedding_params']['method'] == 'UMAP':
+    embedder = UMAP(**best_params['embedding_params'])
+else:
+    embedder = SpectralEmbedding(**best_params['embedding_params'])
+    
+embedded_data = embedder.fit_transform(processed_data)
+
+# Apply clustering
+clusterer = AgglomerativeClustering(**best_params['clustering_params'])
+labels = clusterer.fit_predict(embedded_data)
+
 ```
 
 ## 📝 Best Practices
