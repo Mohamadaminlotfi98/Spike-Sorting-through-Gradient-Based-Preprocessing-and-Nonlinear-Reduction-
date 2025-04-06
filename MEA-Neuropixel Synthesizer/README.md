@@ -58,7 +58,7 @@ neuropixel_synthetic/
 
 📊 Advanced Customization
 Add Bursting Activity and Drift
-```
+```python
 from MEArec import simulate_recordings  
 
 recording_gen = simulate_recordings(  
@@ -70,7 +70,7 @@ recording_gen = simulate_recordings(
 )  
 Inject High-Frequency Noise
 ```
-```
+```python
 recording_gen = simulate_recordings(  
     ...,  
     noise_color="pink",  # "white", "brown", or custom PSD  
