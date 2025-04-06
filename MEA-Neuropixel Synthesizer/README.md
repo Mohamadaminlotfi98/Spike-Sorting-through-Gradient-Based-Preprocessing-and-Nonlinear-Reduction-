@@ -22,7 +22,7 @@ pip install mearec spikeinterface
 ```
 🚀 Quickstart
 Generate a Neuropixel-like Dataset
-```python
+```
 import MEArec as mr  
 import spikeinterface as si  
 
@@ -45,6 +45,7 @@ recording_gen.save("dataset/neuropixel_synthetic")
 # 4. Visualize templates  
 mr.plot_templates(recording_gen.templates)  
 }
+```
 # 📂 Dataset Structure
 ```
 neuropixel_synthetic/  
@@ -53,8 +54,8 @@ neuropixel_synthetic/
 ├── templates.h5          # Waveform templates per neuron  
 ├── probe_positions.csv   # 3D electrode coordinates  
 └── params.yaml           # Simulation parameters  
-
 ```
+
 📊 Advanced Customization
 Add Bursting Activity and Drift
 ```
