@@ -17,6 +17,7 @@ Ground Truth Metadata: Includes precise spike times, neuron IDs, and template po
 Seamless Integration: Compatible with SpikeInterface for preprocessing, sorting, and validation.
 
 📥 Installation
+{
 bash
 Copy
 pip install mearec spikeinterface  
@@ -45,6 +46,7 @@ recording_gen.save("dataset/neuropixel_synthetic")
 
 # 4. Visualize templates  
 mr.plot_templates(recording_gen.templates)  
+}
 # 📂 Dataset Structure
 Copy
 neuropixel_synthetic/  
@@ -57,6 +59,7 @@ neuropixel_synthetic/
 Add Bursting Activity and Drift
 python
 Copy
+{
 from MEArec import simulate_recordings  
 
 recording_gen = simulate_recordings(  
@@ -75,6 +78,7 @@ recording_gen = simulate_recordings(
     noise_floor=10.0,    # μV  
     seed=42  
 )  
+}
 ## 📜 Citation
 Please cite the MEArec and SpikeInterface papers:
 
