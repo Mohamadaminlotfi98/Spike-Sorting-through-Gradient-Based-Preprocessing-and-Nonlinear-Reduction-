@@ -12,7 +12,7 @@ A **color-coded optimization pipeline** for spike sorting with interactive param
 | Gradient Processing  | `apply_gradient(data, n=2)`<br>Enhances spike features through differentiation | ![Gradient](https://via.placeholder.com/150x100.png?text=Raw+vs+1st+Gradient) |
 | Dimensionality Reduction | UMAP/Spectral Embedding<br>`n_components=2-3`                                | ![Embeddings](https://via.placeholder.com/150x100.png?text=2D+Embedding) |
 | Clustering           | Agglomerative (Ward/Average/Complete)<br>`n_clusters=2-10`                  | ![Clusters](https://via.placeholder.com/150x100.png?text=Cluster+Separation) |
-
+```
 ## 🛠️ Installation
 
 ```bash
@@ -49,7 +49,7 @@ gradient_range = range(0, 3)  # 0=Raw, 1=1st deriv, 2=2nd deriv
 ### 2️⃣ UMAP Parameters
 ```python
 {
-  'n_neighbors': 15,       # 👥 Local vs global balance
+  'n_neighbors': 25,       # 👥 Local vs global balance
   'min_dist': 0.1,         # 📏 Cluster compactness
   'n_components': 2        # 🎨 2D vs 3D visualization
 }
