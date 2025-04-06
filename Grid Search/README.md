@@ -3,7 +3,7 @@ Basic Workflow
 Prepare your spike data as a NumPy array (shape: [n_spikes, n_features])
 
 Run parameter optimization:
-
+{{{
 python
 Copy
 from your_module import get_optimal_parameters, run_grid_search
@@ -12,7 +12,7 @@ from your_module import get_optimal_parameters, run_grid_search
 param_grid, metric = get_optimal_parameters(your_data)
 best_params, best_score = run_grid_search(your_data, param_grid, metric)
 Apply optimal parameters to your full dataset
-
+}}}
 Example Code
 python
 Copy
