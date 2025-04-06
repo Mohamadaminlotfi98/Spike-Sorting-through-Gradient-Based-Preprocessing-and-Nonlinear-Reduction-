@@ -1,4 +1,4 @@
-```python
+``` python
 comp_gt = sc.compare_sorter_to_ground_truth(gt_sorting=sorting_GT, tested_sorting=sorting_HS)
 def calculate_average_accuracy(ground_truth_comparison):
     perf_df = ground_truth_comparison.get_performance()
