@@ -1,0 +1,30 @@
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(20,10))
+for i in range(len(waveforms_array)):
+    plt.plot(waveforms_array[i],linewidth=0.4)
+plt.xticks(fontsize=8)
+plt.xlabel('sample',color='red')
+plt.ylabel('uV',color='red')
+
+
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+pca_result = pca.fit_transform(waveforms_array)
+fig = plt.figure()
+plt.scatter(pca_result[:, 0], pca_result[:, 1], cmap='viridis')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.show()
+
+
+### PLot Probe with channels and spike trains
+w_ts = sw.plot_traces(recording, time_range=(0, 20))
+w_rs = sw.plot_rasters(sorting_GT, time_range=(0, 20))
+
+probe = recording.get_probe()
+print(probe)
+
+from probeinterface.plotting import plot_probe
+
+_ = plot_probe(probe)
