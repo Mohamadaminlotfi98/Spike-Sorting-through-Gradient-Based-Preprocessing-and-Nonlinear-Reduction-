@@ -1,0 +1,21 @@
+comp_gt = sc.compare_sorter_to_ground_truth(gt_sorting=sorting_GT, tested_sorting=sorting_HS)
+def calculate_average_accuracy(ground_truth_comparison):
+    perf_df = ground_truth_comparison.get_performance()
+    avg_accuracy = perf_df['accuracy'].mean()
+    return avg_accuracy
+
+avg_acc = calculate_average_accuracy(comp_gt)
+print(f"Average accuracy of HS: {avg_acc:.2%}")
+
+w_conf = sw.plot_confusion_matrix(comp_gt)
+w_agr = sw.plot_agreement_matrix(comp_gt)
+comp_gt = sc.compare_sorter_to_ground_truth(gt_sorting=sorting_GT, tested_sorting=sorting_SC2)
+avg_acc = calculate_average_accuracy(comp_gt)
+print(f"Average accuracy of SC2: {avg_acc:.2%}")
+w_conf = sw.plot_confusion_matrix(comp_gt)
+w_agr = sw.plot_agreement_matrix(comp_gt)
+comp_gt = sc.compare_sorter_to_ground_truth(gt_sorting=sorting_GT, tested_sorting=sorting_KS4)
+avg_acc = calculate_average_accuracy(comp_gt)
+print(f"Average accuracy of KS4: {avg_acc:.2%}")
+w_conf = sw.plot_confusion_matrix(comp_gt)
+w_agr = sw.plot_agreement_matrix(comp_gt)
