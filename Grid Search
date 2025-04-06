@@ -1,0 +1,135 @@
+import numpy as np
+from itertools import product
+from sklearn.metrics import silhouette_score
+from sklearn.manifold import SpectralEmbedding
+from sklearn.cluster import AgglomerativeClustering
+from umap import UMAP
+from sklearn.model_selection import ParameterGrid
+
+def grid_search_spike_sorting(data, true_labels, 
+                             gradient_range=(0, 4),
+                             cluster_range=(2, 10),
+                             umap_params=None,
+                             spectral_params=None):
+    """
+    Comprehensive grid search for spike sorting hyperparameters
+    
+    Parameters:
+    data (np.ndarray): Spike waveforms [n_spikes, n_timepoints]
+    true_labels (np.ndarray): Ground truth cluster labels
+    gradient_range (tuple): Range of gradient orders to test (start, end)
+    cluster_range (tuple): Range of cluster counts to test (start, end)
+    umap_params (dict): Parameter grid for UMAP
+    spectral_params (dict): Parameter grid for SpectralEmbedding
+    
+    Returns:
+    dict: Best parameters and evaluation metrics
+    """
+    
+    # Default parameter grids
+    if umap_params is None:
+        umap_params = {
+            'n_neighbors': [15, 30, 50],
+            'min_dist': [0.1, 0.5],
+            'n_components': [2, 3],
+            'metric': ['euclidean', 'cosine']
+        }
+        
+    if spectral_params is None:
+        spectral_params = {
+            'n_components': [2, 3],
+            'affinity': ['nearest_neighbors', 'rbf'],
+            'n_neighbors': [5, 10],
+            'gamma': [0.1, 1.0]
+        }
+
+    # Generate parameter combinations
+    gradient_orders = range(gradient_range[0], gradient_range[1]+1)
+    cluster_counts = range(cluster_range[0], cluster_range[1]+1)
+    
+    # Create parameter grids with conditional constraints
+    umap_grid = ParameterGrid(umap_params)
+    
+    # Handle SpectralEmbedding conditional parameters
+    spectral_grid = []
+    for params in ParameterGrid(spectral_params):
+        if params['affinity'] == 'nearest_neighbors':
+            spectral_grid.append({k:v for k,v in params.items() 
+                                if k in ['n_components', 'affinity', 'n_neighbors']})
+        else:
+            spectral_grid.append({k:v for k,v in params.items()
+                                if k in ['n_components', 'affinity', 'gamma']})
+
+    best_result = {
+        'silhouette': -1,
+        'accuracy': 0,
+        'params': None
+    }
+
+    # Main grid search loop
+    for grad_order in gradient_orders:
+        transformed_data = apply_gradient(data, grad_order)
+        
+        # UMAP parameter search
+        for umap_config in umap_grid:
+            reducer = UMAP(**umap_config)
+            embedding = reducer.fit_transform(transformed_data)
+            
+            for n_clusters in cluster_counts:
+                clusterer = AgglomerativeClustering(n_clusters=n_clusters)
+                pred_labels = clusterer.fit_predict(embedding)
+                
+                # Skip invalid clustering scenarios
+                if len(np.unique(pred_labels)) < 2:
+                    continue
+                
+                # Calculate metrics
+                sil_score = silhouette_score(embedding, pred_labels)
+                acc = calculate_accuracy(true_labels, pred_labels)
+                
+                # Update best result
+                if sil_score > best_result['silhouette']:
+                    best_result = {
+                        'silhouette': sil_score,
+                        'accuracy': acc,
+                        'params': {
+                            'method': 'UMAP',
+                            'gradient_order': grad_order,
+                            'n_clusters': n_clusters,
+                            **umap_config
+                        }
+                    }
+
+        # Spectral Embedding parameter search
+        for spec_config in spectral_grid:
+            try:
+                reducer = SpectralEmbedding(**spec_config)
+                embedding = reducer.fit_transform(transformed_data)
+            except Exception as e:
+                print(f"Spectral Embedding failed with {spec_config}: {str(e)}")
+                continue
+            
+            for n_clusters in cluster_counts:
+                clusterer = AgglomerativeClustering(n_clusters=n_clusters)
+                pred_labels = clusterer.fit_predict(embedding)
+                
+                if len(np.unique(pred_labels)) < 2:
+                    continue
+                
+                sil_score = silhouette_score(embedding, pred_labels)
+                acc = calculate_accuracy(true_labels, pred_labels)
+                
+                if sil_score > best_result['silhouette']:
+                    best_result = {
+                        'silhouette': sil_score,
+                        'accuracy': acc,
+                        'params': {
+                            'method': 'Spectral',
+                            'gradient_order': grad_order,
+                            'n_clusters': n_clusters,
+                            **spec_config
+                        }
+                    }
+
+    return best_result
+
