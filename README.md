@@ -1,7 +1,5 @@
 # Spike-Sorting-through-Gradient-Based-Preprocessing-and-Nonlinear-Reduction-with Agglomerative Clustering
 
-Here’s a polished, detailed GitHub repository description for your spike sorting methods (GSA-Spike and GUA-Spike). I’ve structured it to highlight technical strengths, usability, and reproducibility:
-
 ## 🧠 SpikeSorting
 # Unsupervised Spike Sorting via Gradient-Based Preprocessing, Nonlinear Dimensionality Reduction, and Agglomerative Clustering
 
