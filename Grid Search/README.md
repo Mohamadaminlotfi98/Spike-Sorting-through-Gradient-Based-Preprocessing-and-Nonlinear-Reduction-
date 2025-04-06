@@ -1,6 +1,7 @@
 # 🧠⚡ Automated Spike Sorting Optimization
-```
+```bash
 ![Pipeline Overview](https://via.placeholder.com/800x300.png?text=Optimization+Pipeline+Flowchart)
+```
 *Example workflow diagram*
 
 A **color-coded optimization pipeline** for spike sorting with interactive parameter selection and cluster quality visualization.
@@ -12,7 +13,7 @@ A **color-coded optimization pipeline** for spike sorting with interactive param
 | Gradient Processing  | `apply_gradient(data, n=2)`<br>Enhances spike features through differentiation | ![Gradient](https://via.placeholder.com/150x100.png?text=Raw+vs+1st+Gradient) |
 | Dimensionality Reduction | UMAP/Spectral Embedding<br>`n_components=2-3`                                | ![Embeddings](https://via.placeholder.com/150x100.png?text=2D+Embedding) |
 | Clustering           | Agglomerative (Ward/Average/Complete)<br>`n_clusters=2-10`                  | ![Clusters](https://via.placeholder.com/150x100.png?text=Cluster+Separation) |
-```
+
 ## 🛠️ Installation
 
 ```bash
