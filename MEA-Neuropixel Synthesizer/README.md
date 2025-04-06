@@ -1,7 +1,7 @@
 ## 🧬 MEA Data Synthesizer
 # Generate Synthetic Multi-Electrode Array (MEA) Recordings with Ground Truth Spiking Activity
 
-Python 3.8+
+![image](https://github.com/user-attachments/assets/2cfe13a5-83bc-4705-a553-c03c075659f0)
 
 A Python pipeline for synthesizing realistic extracellular recordings using MEArec and SpikeInterface. Generate ground-truth spiking activity with precise control over probe geometry, neuronal templates, noise levels, and firing dynamics. Ideal for benchmarking spike sorting algorithms like GSA-Spike and GUA-Spike.
 
@@ -20,7 +20,6 @@ Seamless Integration: Compatible with SpikeInterface for preprocessing, sorting,
 bash
 Copy
 pip install mearec spikeinterface  
-git clone https://github.com/yourusername/MEA-Data-Synthesizer.git  
 🚀 Quickstart
 Generate a Neuropixel-like Dataset
 python
