@@ -1,130 +1,119 @@
-## Automated Spike Sorting Optimization Tool
+```markdown
+# 🧠⚡ Automated Spike Sorting Optimization
 
-A configurable pipeline for optimizing spike sorting parameters through gradient transformations, dimensionality reduction, and hierarchical clustering with automated grid search.
+![Pipeline Overview](https://via.placeholder.com/800x300.png?text=Optimization+Pipeline+Flowchart)
+*Example workflow diagram (replace with actual image)*
 
-## Features
+A **color-coded optimization pipeline** for spike sorting with interactive parameter selection and cluster quality visualization.
 
-- **Gradient Transformation**: Apply 1st to Nth-order gradients to enhance spike features
-- **Dimensionality Reduction**:
-  - UMAP (non-linear embedding)
-  - Spectral Embedding (linear/non-linear hybrid)
-- **Clustering**: Agglomerative Hierarchical Clustering with multiple linkage methods
-- **Parameter Optimization**: Grid search with three evaluation metrics:
-  - Silhouette Score
-  - Davies-Bouldin Index
-  - Calinski-Harabasz Index
+## 🚀 Features
 
-## Installation
+| Feature              | Description                                                                 | Visualization Example        |
+|----------------------|-----------------------------------------------------------------------------|-------------------------------|
+| Gradient Processing  | `apply_gradient(data, n=2)`<br>Enhances spike features through differentiation | ![Gradient](https://via.placeholder.com/150x100.png?text=Raw+vs+1st+Gradient) |
+| Dimensionality Reduction | UMAP/Spectral Embedding<br>`n_components=2-3`                                | ![Embeddings](https://via.placeholder.com/150x100.png?text=2D+Embedding) |
+| Clustering           | Agglomerative (Ward/Average/Complete)<br>`n_clusters=2-10`                  | ![Clusters](https://via.placeholder.com/150x100.png?text=Cluster+Separation) |
 
-1. **Requirements**:
-   - Python 3.7+
-   - numpy
-   - scikit-learn
-   - umap-learn
+## 🛠️ Installation
 
-2. **Install dependencies**:
-   ```bash
-   pip install numpy scikit-learn umap-learn
+```bash
+# Color-coded installation guide
+pip install \
+  numpy \           # ➡️ Array processing (v1.23+)
+  scikit-learn \    # ➡️ Clustering & metrics (v1.2+)
+  umap-learn        # ➡️ Non-linear embedding (v0.5+)
+```
+
+## 📈 Workflow Overview
+
+```mermaid
+graph TD
+    A[Raw Spike Data] --> B{Apply Gradient?}
+    B -->|Yes| C[Gradient Transform]
+    B -->|No| D[Embedding]
+    C --> D
+    D --> E[Clustering]
+    E --> F[Metric Calculation]
+    F --> G{Optimal?}
+    G -->|Yes| H[Return Parameters]
+    G -->|No| I[Next Combination]
+```
+
+## 🎛️ Parameter Configuration Guide
+
+### 1️⃣ Gradient Settings
+```python
+# Recommended for 3000+ spikes 🚀
+gradient_range = range(0, 3)  # 0=Raw, 1=1st deriv, 2=2nd deriv
+```
+
+### 2️⃣ UMAP Parameters
+```python
+{
+  'n_neighbors': 15,       # 👥 Local vs global balance
+  'min_dist': 0.1,         # 📏 Cluster compactness
+  'n_components': 2        # 🎨 2D vs 3D visualization
+}
+```
+
+### 3️⃣ Clustering Options
+```python
+AgglomerativeClustering(
+  n_clusters=5,            # 🔢 Start with sqrt(n_spikes)
+  linkage='ward'           # ⛓️ Ward=var, Complete=max
+)
+```
+
+## 📊 Evaluation Metrics Comparison
+
+| Metric            | Best For                  | Ideal Range | Color Code      |
+|-------------------|---------------------------|-------------|-----------------|
+| Silhouette Score  | Balanced cluster density  | 0.6-1.0     | 🟢 High is good |
+| Davies-Bouldin    | Separated cluster centers | 0-0.5       | 🔵 Low is good  |
+| Calinski-Harabasz | Large datasets            | 300+        | 🟡 Higher=better|
+
+## 💻 Example Run (Color Output)
+
+```python
+# Input parameters
+>>> Enter total number of spikes: 3364
+>>> Suggested gradient range: 0-3 🌈
+>>> Choose embedding method: UMAP 🗺️
+>>> Select metric: silhouette 📐
+
+# Optimization progress
+Processing combination 23/150...
+✅ Found new best: Silhouette=0.72
+┌──────────────────────┬──────────────┐
+│ Gradient Order       │ 2            │
+│ UMAP n_neighbors     │ 25           │
+│ Clusters             │ 6            │
+└──────────────────────┴──────────────┘
+```
+
+## 📝 Best Practices
+
+1. **Parameter Ranges**:
+   - 🔄 Start broad then narrow down
+   - 📈 Use logarithmic scales for large ranges
+
+2. **Visual Checks**:
+   ```python
+   import matplotlib.pyplot as plt
+   plt.scatter(embedded[:,0], embedded[:,1], c=labels, cmap='tab20')
+   plt.title(f'Cluster Separation (Score: {best_score:.2f})')
+   plt.show()
    ```
 
-###   Usage
-Basic Workflow
-Prepare your spike data as a NumPy array (shape: [n_spikes, n_features])
+## 🚨 Common Errors
 
-Run parameter optimization:
+| Error Type           | Solution                  | Color Code |
+|----------------------|---------------------------|------------|
+| Memory Error         | Reduce gradient order     | 🟠 Warning |
+| Cluster Collapse     | Increase min_dist         | 🔴 Critical|
+| Metric Contradiction | Try different evaluation  | 🟡 Caution |
 
-```
-from your_module import get_optimal_parameters, run_grid_search
+## 🌐 References
 
-# Get optimal parameters
-param_grid, metric = get_optimal_parameters(your_data)
-best_params, best_score = run_grid_search(your_data, param_grid, metric)
-
-```
-
-3. **Apply optimal parameters to your full dataset**
-
-```
-import numpy as np
-from your_module import apply_gradient, get_optimal_parameters, run_grid_search
-
-# Load your spike data
-spike_data = np.load('spikes.npy')  # Shape: [n_spikes, n_features]
-
-# Find optimal parameters
-param_grid, metric = get_optimal_parameters(spike_data)
-best_params, best_score = run_grid_search(spike_data, param_grid, metric)
-
-# Apply best parameters
-processed_data = apply_gradient(spike_data, best_params['gradient_order'])
-
-# Apply optimal embedding
-if best_params['embedding_params']['method'] == 'UMAP':
-    embedder = UMAP(**best_params['embedding_params'])
-else:
-    embedder = SpectralEmbedding(**best_params['embedding_params'])
-    
-embedded_data = embedder.fit_transform(processed_data)
-
-# Apply clustering
-clusterer = AgglomerativeClustering(**best_params['clustering_params'])
-labels = clusterer.fit_predict(embedded_data)
-
-```
-
-## Parameters Guide
-
-When prompted during optimization:
-
-1. **Number of Spikes**: Total spikes in your dataset
-2. **Gradient Range**:
-   - Suggested: 0-3 (auto-calculated based on spike count)
-   - Higher orders emphasize spike shape changes
-3. **Cluster Range**:
-   - Suggested: 2-√n_spikes (auto-calculated)
-   - Start with 2-10 for initial explorations
-4. **Embedding Method**:
-   - UMAP: Better for non-linear structures (default)
-   - Spectral: Better for linear relationships
-5. **Evaluation Metric**:
-   - Silhouette: Best for compact, separated clusters
-   - Davies-Bouldin: Good for density comparisons
-   - Calinski-Harabasz: Best for variance ratios
-
-## Output Interpretation
-
-The optimization returns:
-- `best_score`: Optimal metric value found
-- `best_params`: Dictionary containing:
-  - `gradient_order`: Optimal number of gradient applications
-  - `embedding_params`: Optimal embedding configuration
-  - `clustering_params`: Optimal cluster count + linkage method
-
-## Best Practices
-
-1. **Start with Defaults**: Use suggested parameter ranges first
-2. **Progressively Refine**: 
-   - First run: Wide ranges, coarse steps
-   - Subsequent runs: Narrow ranges around best candidates
-3. **Metric Selection**:
-   - Use Silhouette for balanced cluster evaluation
-   - Use Davies-Bouldin when cluster separation is critical
-   - Use Calinski-Harabasz for large datasets (>10k spikes)
-
-## Limitations
-
-1. **Computational Complexity**:
-   - Parameter combinations grow exponentially - start with ≤5 values per parameter
-2. **Memory Requirements**:
-   - UMAP requires ≥16GB RAM for >50k spikes
-3. **Cluster Shape Bias**:
-   - Hierarchical clustering favors spherical clusters
-
-## References
-
-1. UMAP: McInnes et al. (2018)
-2. Spectral Embedding: Ng et al. (2002)
-3. Clustering Metrics: Scikit-learn documentation
-
-
-
+- [UMAP Documentation](https://umap-learn.readthedocs.io) 📘
+- [Scikit-learn Clustering](https://scikit-learn.org/stable/modules/clustering.html) 📗
