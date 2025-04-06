@@ -1,0 +1,90 @@
+import spikeinterface.sorters as sorters
+import spikeinterface.comparison as sc
+from spikeinterface import extract_waveforms
+import spikeinterface as si  # import core only
+import spikeinterface.extractors as se
+import spikeinterface.preprocessing as spre
+import spikeinterface.postprocessing as spost
+import spikeinterface.qualitymetrics as sqm
+import spikeinterface.comparison as sc
+import spikeinterface.exporters as sexp
+import spikeinterface.curation as scur
+import spikeinterface.widgets as sw
+
+
+# loading MEArec recording
+import spikeinterface as si
+recording = se.MEArecRecordingExtractor('recorded_mearec_24ch_100ksamples.h5')
+# loading ground-truth sorting
+sorting_GT = se.MEArecSortingExtractor('recorded_mearec_24ch_100ksamples.h5')
+
+
+import numpy as np
+import numpy as np
+from scipy import signal
+
+def bandpass_filter(data, fs, lowcut=400, highcut=6000, order=4):
+    """
+    Apply a zero-phase Butterworth bandpass filter.
+
+    Parameters:
+        data (np.ndarray): Shape [num_channels, samples]
+        fs (float): Sampling rate (Hz)
+        lowcut (float): Lower cutoff frequency (Hz)
+        highcut (float): Upper cutoff frequency (Hz)
+        order (int): Filter order
+
+    Returns:
+        filtered_data (np.ndarray): Filtered signal
+    """
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    sos = signal.butter(order, [low, high], btype='band', output='sos')
+    filtered_data = np.zeros_like(data)
+    for i in range(data.shape[0]):
+        filtered_data[i, :] = signal.sosfiltfilt(sos, data[i, :])
+    return filtered_data
+
+
+# Load the raw traces [num_channels, num_frames]
+num_frames = recording.get_num_frames()
+traces_all_channels = recording.get_traces(start_frame=0, end_frame=num_frames)
+traces_transposed = traces_all_channels.T  # Shape: (num_channels, num_frames)
+
+filtered_data = bandpass_filter(traces_transposed, fs=25000)
+
+# Collect all spikes from all units and sort by time
+unit_ids = sorting_GT.get_unit_ids()
+all_spikes = []
+for unit_id in unit_ids:
+    spike_train = sorting_GT.get_unit_spike_train(unit_id=unit_id)
+    all_spikes.extend([(spike_time, unit_id) for spike_time in spike_train])
+
+# Sort spikes by their occurrence time
+all_spikes.sort(key=lambda x: x[0])
+
+# Extract waveforms and labels
+waveforms = []
+labels = []
+for spike_time, unit_id in all_spikes:
+    start = spike_time - 20
+    end = spike_time + 20   # +1 to include spike_time +25
+
+    # Skip if the window is out of bounds
+    if start < 0 or end > num_frames:
+        continue
+
+    # Find channel with maximum amplitude at the spike time
+    peak_values = filtered_data[:, spike_time]
+    peak_channel = np.argmax(peak_values)
+
+    # Extract waveform from the peak channel
+    waveform = traces_transposed[peak_channel, start:end]
+    waveforms.append(waveform)
+    labels.append(unit_id)
+
+# Convert to numpy arrays
+waveforms_array = np.array(waveforms)  # Shape: (num_spikes, 41)
+labels_array = np.array(labels)       # Shape: (num_spikes,)
+spike_class = np.array([int(label[1:]) + 1  for label in labels_array])
