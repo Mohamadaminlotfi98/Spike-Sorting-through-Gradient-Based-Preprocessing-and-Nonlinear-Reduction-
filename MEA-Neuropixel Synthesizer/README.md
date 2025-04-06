@@ -17,10 +17,13 @@ Ground Truth Metadata: Includes precise spike times, neuron IDs, and template po
 Seamless Integration: Compatible with SpikeInterface for preprocessing, sorting, and validation.
 
 📥 Installation
+```
 {
 bash
 Copy
-pip install mearec spikeinterface  
+pip install mearec spikeinterface
+
+```
 🚀 Quickstart
 Generate a Neuropixel-like Dataset
 python
