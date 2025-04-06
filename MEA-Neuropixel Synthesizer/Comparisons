@@ -1,4 +1,3 @@
-``` python
 comp_gt = sc.compare_sorter_to_ground_truth(gt_sorting=sorting_GT, tested_sorting=sorting_HS)
 def calculate_average_accuracy(ground_truth_comparison):
     perf_df = ground_truth_comparison.get_performance()
@@ -21,4 +20,4 @@ print(f"Average accuracy of KS4: {avg_acc:.2%}")
 w_conf = sw.plot_confusion_matrix(comp_gt)
 w_agr = sw.plot_agreement_matrix(comp_gt)
 
-```
+
