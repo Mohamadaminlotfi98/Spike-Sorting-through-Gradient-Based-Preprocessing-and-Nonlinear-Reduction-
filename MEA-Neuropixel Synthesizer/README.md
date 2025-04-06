@@ -18,27 +18,22 @@ Seamless Integration: Compatible with SpikeInterface for preprocessing, sorting,
 
 📥 Installation
 ```
-{
-bash
-Copy
 pip install mearec spikeinterface
-
 ```
 🚀 Quickstart
 Generate a Neuropixel-like Dataset
-python
-Copy
+```python
 import MEArec as mr  
 import spikeinterface as si  
 
 # 1. Create a 24-channel Neuropixel probe  
 probe = mr.generate_recording_probe(neuropixel=True, num_columns=2)  
 
-# 2. Simulate 10-minute recording with 20 neurons  
+# 2. Simulate 10-minute recording with 50 neurons  
 recording_gen = mr.simulate_recordings(  
     duration=600,  
     probe=probe,  
-    num_neurons=20,  
+    num_neurons=50,  
     firing_rate=5.0,  # Hz  
     noise_level=15.0,  # μV  
     seed=42  
@@ -51,18 +46,18 @@ recording_gen.save("dataset/neuropixel_synthetic")
 mr.plot_templates(recording_gen.templates)  
 }
 # 📂 Dataset Structure
-Copy
+```
 neuropixel_synthetic/  
 ├── recordings.h5         # Raw traces (μV)  
 ├── spike_trains.h5       # Ground truth spike times & neuron IDs  
 ├── templates.h5          # Waveform templates per neuron  
 ├── probe_positions.csv   # 3D electrode coordinates  
 └── params.yaml           # Simulation parameters  
+
+```
 📊 Advanced Customization
 Add Bursting Activity and Drift
-python
-Copy
-{
+```
 from MEArec import simulate_recordings  
 
 recording_gen = simulate_recordings(  
@@ -73,20 +68,19 @@ recording_gen = simulate_recordings(
     max_drift=100.0      # μm  
 )  
 Inject High-Frequency Noise
-python
-Copy
+```
+```
 recording_gen = simulate_recordings(  
     ...,  
     noise_color="pink",  # "white", "brown", or custom PSD  
     noise_floor=10.0,    # μV  
     seed=42  
 )  
-}
+```
 ## 📜 Citation
 Please cite the MEArec and SpikeInterface papers:
 
-bibtex
-Copy
+```
 @article{Buccino2021MEArec,  
   title={MEArec: A Fast and Customizable Testbench Simulator for Ground-Truth Extracellular Spiking Activity},  
   author={Buccino, Alessio Paolo and Einevoll, Gaute T},  
@@ -106,13 +100,11 @@ Copy
   year={2020},  
   doi={10.7554/eLife.61834}  
 }  
+```
 # 🌐 Resources
 MEArec Documentation: https://mearec.readthedocs.io
 
 SpikeInterface Documentation: https://spikeinterface.readthedocs.io
-
-Example Notebooks: examples/
-
 
 # 🙏 Acknowledgments
 The MEArec and SpikeInterface teams for their groundbreaking tools.
