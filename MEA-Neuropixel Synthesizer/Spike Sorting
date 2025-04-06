@@ -1,0 +1,188 @@
+import spikeinterface.preprocessing as spre  # Need to import preprocessing explicitl
+
+recording_cmr = recording
+
+# Create preprocessing pipeline
+recording_f = spre.bandpass_filter(recording, freq_min=300, freq_max=6000)
+recording_cmr = spre.common_reference(recording_f, reference="global", operator="median")
+# this computes and saves the recording after applying the preprocessing chain
+recording_preprocessed = recording_cmr.save(format="binary")
+print(recording_preprocessed)
+print(recording_f)
+print(recording_cmr)
+print("Available sorters", ss.available_sorters())
+print("Installed sorters", ss.installed_sorters())
+
+
+sorting_SC2 = ss.run_sorter(sorter_name="spykingcircus2", recording=recording_preprocessed)
+print(sorting_SC2)
+
+sorting_KS4 = ss.run_sorter(sorter_name="klusta", recording=recording_preprocessed)
+print(sorting_KS4)
+
+sorting_HS = ss.run_sorter(sorter_name="herdingspikes", recording=recording_preprocessed)
+print(sorting_HS)
+
+
+import shutil
+
+# Remove previous analyzer folders
+shutil.rmtree("analyzer_SC2_binary", ignore_errors=True)
+shutil.rmtree("analyzer_HS_binary", ignore_errors=True)
+shutil.rmtree("analyzer_KS4_binary", ignore_errors=True)
+
+
+# Create fresh analyzers with explicit waveform parameters
+analyzer_SC2 = si.create_sorting_analyzer(
+    sorting=sorting_SC2,
+    recording=recording_preprocessed,
+    format="binary_folder",
+    folder="analyzer_SC2_binary",
+    overwrite=True,
+    sparse=False,  # Start with non-sparse mode
+    ms_before=1.0,
+    ms_after=2.0,
+    max_spikes_per_unit=500,
+    n_jobs=1  # Start with single job for debugging
+)
+
+analyzer_HS = si.create_sorting_analyzer(
+    sorting=sorting_HS,
+    recording=recording_preprocessed,
+    format="binary_folder",
+    folder="analyzer_HS_binary",
+    overwrite=True,
+    sparse=False,
+    ms_before=1.0,
+    ms_after=2.0,
+    max_spikes_per_unit=500,
+    n_jobs=1
+)
+
+analyzer_KS4 = si.create_sorting_analyzer(
+    sorting=sorting_HS,
+    recording=recording_preprocessed,
+    format="binary_folder",
+    folder="analyzer_KS4_binary",
+    overwrite=True,
+    sparse=False,
+    ms_before=1.0,
+    ms_after=2.0,
+    max_spikes_per_unit=500,
+    n_jobs=1
+)
+
+
+# Ensure the recording is properly saved
+recording_preprocessed.save(folder="preprocessed_recording", format="binary", overwrite=True)
+
+
+
+# Try computing extensions one by one
+extensions_to_compute = [
+    "random_spikes",
+    "waveforms",
+    "noise_levels",
+    "templates",
+    "spike_amplitudes",
+    "unit_locations",
+    "spike_locations",
+    "correlograms",
+    "template_similarity"
+]
+
+print("Processing SC2 step-by-step:")
+for ext in extensions_to_compute:
+    print(f"Computing {ext}...")
+    try:
+        analyzer_SC2.compute(ext, **extension_params.get(ext, {}))
+        analyzer_SC2.save()
+    except Exception as e:
+        print(f"Error in {ext}: {str(e)}")
+        break
+
+print("Processing HS step-by-step:")
+for ext in extensions_to_compute:
+    print(f"Computing {ext}...")
+    try:
+        analyzer_HS.compute(ext, **extension_params.get(ext, {}))
+        analyzer_HS.save()
+    except Exception as e:
+        print(f"Error in {ext}: {str(e)}")
+        break
+
+print("Processing HS step-by-step:")
+for ext in extensions_to_compute:
+    print(f"Computing {ext}...")
+    try:
+        analyzer_KS4.compute(ext, **extension_params.get(ext, {}))
+        analyzer_KS4.save()
+    except Exception as e:
+        print(f"Error in {ext}: {str(e)}")
+        break
+
+# First fix the folder paths for each analyzer
+analyzer_SC2 = si.create_sorting_analyzer(
+    sorting=sorting_SC2,
+    recording=recording_preprocessed,
+    format='binary_folder',
+    folder='analyzer_SC2_binary',  # Changed folder name
+    overwrite=True
+)
+
+analyzer_HS = si.create_sorting_analyzer(
+    sorting=sorting_HS,
+    recording=recording_preprocessed,
+    format='binary_folder',
+    folder='analyzer_HS_binary',  # Changed folder name
+    overwrite=True
+)
+
+analyzer_KS4 = si.create_sorting_analyzer(
+    sorting=sorting_HS,
+    recording=recording_preprocessed,
+    format='binary_folder',
+    folder='analyzer_HS_binary',  # Changed folder name
+    overwrite=True
+)
+
+# Define processing parameters (same as used for TDC)
+extensions_to_compute = [
+    "random_spikes",
+    "waveforms",
+    "noise_levels",
+    "templates",
+    "spike_amplitudes",
+    "unit_locations",
+    "spike_locations",
+    "correlograms",
+    "template_similarity"
+]
+
+extension_params = {
+    "unit_locations": {"method": "center_of_mass"},
+    "spike_locations": {"ms_before": 0.1},
+    "correlograms": {"bin_ms": 0.1},
+    "template_similarity": {"method": "cosine_similarity"}
+}
+
+qm_params = sqm.get_default_qm_params()
+qm_params["presence_ratio"]["bin_duration_s"] = 1
+qm_params["amplitude_cutoff"]["num_histogram_bins"] = 5
+qm_params["drift"]["interval_s"] = 2
+qm_params["drift"]["min_spikes_per_interval"] = 2
+
+# Process SC2 results
+print("Processing SC2...")
+analyzer_SC2.compute(extensions_to_compute, extension_params=extension_params)
+analyzer_SC2.compute("quality_metrics", qm_params)
+
+# Process HS results
+print("Processing HS...")
+analyzer_HS.compute(extensions_to_compute, extension_params=extension_params)
+analyzer_HS.compute("quality_metrics", qm_params)
+
+# Process HS results
+print("Processing HS...")
+analyzer_KS4.compute(extensions_to_compute, extension_params=extension_params)
+analyzer_KS4.compute("quality_metrics", qm_params)
