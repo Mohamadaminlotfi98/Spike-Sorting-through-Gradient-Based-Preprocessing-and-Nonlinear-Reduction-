@@ -22,7 +22,7 @@ pip install mearec spikeinterface
 ```
 🚀 Quickstart
 Generate a Neuropixel-like Dataset
-```
+```python
 import MEArec as mr  
 import spikeinterface as si  
 
