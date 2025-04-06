@@ -1,0 +1,128 @@
+import numpy as np
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+from sklearn.manifold import SpectralEmbedding
+from sklearn.cluster import AgglomerativeClustering
+from umap import UMAP
+from itertools import product
+
+def apply_gradient(data, n=1):
+    if n < 1:
+        return data
+    for _ in range(n):
+        data = np.diff(data, axis=1)
+    return data
+
+def get_optimal_parameters(data):
+    num_spikes = int(input("Enter total number of spikes: "))
+    print("\n=== Parameter Suggestions ===")
+    
+    max_gradient = max(3, min(5, num_spikes // 1000))
+    print(f"Suggested gradient range: 0-{max_gradient}")
+    gradient_range = list(range(
+        int(input("Enter gradient start (default 0): ") or 0),
+        int(input("Enter gradient end: ") or max_gradient) + 1
+    ))
+    
+    max_clusters = max(10, int(np.sqrt(num_spikes)))
+    print(f"Suggested cluster range: 2-{max_clusters}")
+    cluster_range = list(range(
+        int(input("Enter cluster start (default 2): ") or 2),
+        int(input("Enter cluster end: ") or max_clusters) + 1
+    ))
+    
+    embedding_choice = input("Choose embedding method (UMAP/Spectral): ").lower()
+    
+    param_grid = {'gradient': gradient_range}
+    
+    if embedding_choice == 'umap':
+        n_neighbors_start = int(input("UMAP n_neighbors start (suggest 5-50): ") or 15)
+        n_neighbors_end = int(input("UMAP n_neighbors end: ") or 30) + 1
+        n_neighbors_range = list(range(n_neighbors_start, n_neighbors_end))
+        
+        min_dist_start = float(input("UMAP min_dist start (0.1-0.9): ") or 0.1)
+        min_dist_end = float(input("UMAP min_dist end: ") or 0.5)
+        step = 0.1
+        min_dist_range = np.arange(min_dist_start, min_dist_end + step, step).tolist()
+        
+        param_grid['embedding'] = [{
+            'method': 'UMAP',
+            'n_neighbors': n_neighbors_range,
+            'min_dist': min_dist_range,
+            'n_components': [2, 3]
+        }]
+    else:
+        param_grid['embedding'] = [{
+            'method': 'Spectral',
+            'n_components': [2, 3],
+            'affinity': ['nearest_neighbors', 'rbf'],
+            'gamma': [0.1, 1, 10],
+            'n_neighbors': list(range(5, 25, 5))
+        }]
+    
+    param_grid['clustering'] = [{
+        'n_clusters': cluster_range,
+        'linkage': ['ward', 'average', 'complete']
+    }]
+    
+    metric_choice = input("Choose evaluation metric (silhouette/davies/calinski): ").lower()
+    
+    return param_grid, metric_choice
+
+def run_grid_search(data, param_grid, metric):
+    best_score = -np.inf if metric in ['silhouette', 'calinski'] else np.inf
+    best_params = None
+    
+    for grad_order in param_grid['gradient']:
+        for emb_params in param_grid['embedding']:
+            for clust_params in param_grid['clustering']:
+                for n_clusters in clust_params['n_clusters']:
+                    for linkage in clust_params['linkage']:
+                        if emb_params['method'] == 'UMAP':
+                            for n_components in emb_params['n_components']:
+                                for n_neighbors in emb_params['n_neighbors']:
+                                    for min_dist in emb_params['min_dist']:
+                                        try:
+                                            transformed = apply_gradient(data, grad_order)
+                                            embedder = UMAP(
+                                                n_neighbors=n_neighbors,
+                                                min_dist=min_dist,
+                                                n_components=n_components
+                                            )
+                                            embedded = embedder.fit_transform(transformed)
+                                            clusterer = AgglomerativeClustering(
+                                                n_clusters=n_clusters,
+                                                linkage=linkage
+                                            )
+                                            labels = clusterer.fit_predict(embedded)
+                                            
+                                            if metric == 'silhouette':
+                                                score = silhouette_score(embedded, labels)
+                                            elif metric == 'davies':
+                                                score = -davies_bouldin_score(embedded, labels)
+                                            else:
+                                                score = calinski_harabasz_score(embedded, labels)
+                                            
+                                            if (metric in ['silhouette', 'calinski'] and score > best_score) or \
+                                               (metric == 'davies' and score > best_score):
+                                                best_score = score
+                                                best_params = {
+                                                    'gradient_order': grad_order,
+                                                    'embedding_params': {
+                                                        'method': 'UMAP',
+                                                        'n_neighbors': n_neighbors,
+                                                        'min_dist': min_dist,
+                                                        'n_components': n_components
+                                                    },
+                                                    'clustering_params': {
+                                                        'n_clusters': n_clusters,
+                                                        'linkage': linkage
+                                                    }
+                                                }
+                                        except Exception as e:
+                                            print(f"Skipping combination due to error: {str(e)}")
+                                            continue
+                        else:
+                            # Similar handling for SpectralEmbedding
+                            pass  # Implement SpectralEmbedding parameter combinations here
+    
+    return best_params, best_score
