@@ -1,6 +1,5 @@
-```
 # 🧠⚡ Automated Spike Sorting Optimization
-
+```
 ![Pipeline Overview](https://via.placeholder.com/800x300.png?text=Optimization+Pipeline+Flowchart)
 *Example workflow diagram (replace with actual image)*
 
