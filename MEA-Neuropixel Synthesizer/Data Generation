@@ -1,0 +1,85 @@
+# First you need to install below libraries!!!
+
+!pip install spikeinterface[full]
+!pip install datalad
+!apt-get install git-annex
+!pip install MEArec[templates]
+!pip install neuron
+!pip install LFPy>=2.2
+!pip install --upgrade MEArec[full]
+
+
+import os
+import MEArec as mr
+
+# Define output filenames and remove if they exist
+filename_temp = 'template_mearec_24ch_100ksamples.h5'
+filename_record = 'recorded_mearec_24ch_100ksamples.h5'
+
+for filename in [filename_temp, filename_record]:
+    if os.path.exists(filename):
+        os.remove(filename)
+
+Generate and save templates
+tempgen = mr.gen_templates(
+    cell_models_folder='/gdrive/MyDrive/MEArec/src/MEArec/cell_models/bbp',
+    params={
+        'probe': '',
+        'n': 50,
+        'seed': 42
+    }
+)
+mr.save_template_generator(tempgen, filename_temp)
+print("Templates saved")
+
+# Generate recordings with corrected parameters
+recgen = mr.gen_recordings(
+    templates=filename_temp,
+    params={
+        'spiketrains': {
+            'n_exc': 6,  # Excitatory units
+            'n_inh': 2,  # Inhibitory units
+            'f_exc': 5,  # Mean firing rate (Hz)
+            'f_inh': 15,
+            'st_exc': 0.5,
+            'st_inh': 1,
+            'min_rate': 1,
+            'ref_per': 2,
+            'process': 'poisson',
+            't_start': 0,
+            'duration': 10  # 10-second recording
+        },
+        'templates': {
+            'min_dist': 20,  # Spacing between units
+            'min_amp': 100,   # Amplitude range
+            'max_amp': 500,
+            'xlim': [0, 200],  # Spatial constraints
+            'ylim': [0, 200],
+            'zlim': [0, 200],
+            'n_jitters': 1,
+            'upsample': 1,
+            'overlap_threshold': 0.5,
+            'seed': 42
+        },
+        'recordings': {
+            'fs': 32000,  # Sampling rate (Hz)
+            'noise_level': 1,  # Noise level (µV)
+            'noise_mode': 'uncorrelated',
+            'modulation': 'none',  # Disable modulation
+            'bursting': False,
+            'shape_mod': False,
+            'filter': True,
+            'filter_cutoff': [300, 6000],
+            'overlap': False
+        },
+        'job_kwargs': {
+            'n_jobs': 2,
+            'chunk_memory': "100M",
+            'progress_bar': True
+        }
+    }
+)
+
+# Save the recordings
+mr.save_recording_generator(recgen, filename_record)
+print(f"Recordings saved to {filename_record}")
