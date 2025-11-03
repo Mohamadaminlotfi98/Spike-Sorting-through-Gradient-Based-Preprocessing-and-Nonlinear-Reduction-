@@ -50,9 +50,9 @@ gradient_range = range(0, 3)  # 0=Raw, 1=1st deriv, 2=2nd deriv
 ### 2️⃣ UMAP Parameters
 ```python
 {
-  'n_neighbors': 25,       # 👥 Local vs global balance
-  'min_dist': 0.1,         # 📏 Cluster compactness
-  'n_components': 2        # 🎨 2D vs 3D visualization
+  'n_neighbors': 25,       
+  'min_dist': 0.1,         
+  'n_components': 2        
 }
 ```
 
@@ -64,7 +64,7 @@ AgglomerativeClustering(
 )
 ```
 
-## 📊 Evaluation Metrics Comparison
+##  Evaluation Metrics Comparison
 
 | Metric            | Best For                  | Ideal Range | Color Code      |
 |-------------------|---------------------------|-------------|-----------------|
@@ -111,7 +111,7 @@ labels = clusterer.fit_predict(embedded_data)
 
 ```
 
-## 📝 Best Practices
+##  Best Practices
 
 1. **Parameter Ranges**:
    - 🔄 Start broad then narrow down
@@ -133,7 +133,7 @@ labels = clusterer.fit_predict(embedded_data)
 | Cluster Collapse     | Increase min_dist         | 🔴 Critical|
 | Metric Contradiction | Try different evaluation  | 🟡 Caution |
 
-## 🌐 References
+##  References
 
 - [UMAP Documentation](https://umap-learn.readthedocs.io) 📘
 - [Scikit-learn Clustering](https://scikit-learn.org/stable/modules/clustering.html) 📗
