@@ -75,7 +75,7 @@ AgglomerativeClustering(
 ## 💻 Example Run (Color Output)
 
 ```python
-from your_module import get_optimal_parameters, run_grid_search
+from SortingPipeline import get_optimal_parameters, run_grid_search
 
 # Get optimal parameters
 param_grid, metric = get_optimal_parameters(your_data)
@@ -85,7 +85,7 @@ best_params, best_score = run_grid_search(your_data, param_grid, metric)
 
 ```python
 import numpy as np
-from your_module import apply_gradient, get_optimal_parameters, run_grid_search
+from SortingPipeline import apply_gradient, get_optimal_parameters, run_grid_search
 
 # Load your spike data
 spike_data = np.load('spikes.npy')  # Shape: [n_spikes, n_features]
